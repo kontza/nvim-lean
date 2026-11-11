@@ -6,6 +6,9 @@ return function()
 	vim.opt.tabstop = 4
 	vim.opt.softtabstop = -1
 
+	-- bundled with Neovim
+	vim.cmd.colorscheme('zaibatsu')
+
 	vim.pack.add({ 'https://github.com/stevearc/oil.nvim' })
     vim.pack.add({ 'https://github.com/HiPhish/rainbow-delimiters.nvim' })
 
