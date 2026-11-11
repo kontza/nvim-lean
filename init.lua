@@ -49,6 +49,7 @@ local working, ret = pcall(function()
 		})
 
 		require('blink.cmp').setup({
+			keymap = { preset = 'enter' }, -- <CR> accepts the selected completion item
 			completion = {
 				accept = { auto_brackets = { enabled = true } },
 			},
