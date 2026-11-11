@@ -1,10 +1,5 @@
 {
   "plugins": {
-    "blink.cmp": {
-      "rev": "78336bc89ee5365633bcf754d93df01678b5c08f",
-      "src": "https://github.com/saghen/blink.cmp",
-      "version": "1.0.0 - 2.0.0"
-    },
     "friendly-snippets": {
       "rev": "7a1c9f7897a4eb078b157a04c7af81e5869215b1",
       "src": "https://github.com/rafamadriz/friendly-snippets"
@@ -12,11 +7,6 @@
     "mini.nvim": {
       "rev": "f9ac12d7cbd2563cfc2cce9a8152fc8df2ad0d6f",
       "src": "https://github.com/nvim-mini/mini.nvim"
-    },
-    "nvim-treesitter": {
-      "rev": "19bdfc04f40ed2ccb3340591d125f759b0406875",
-      "src": "https://github.com/nvim-treesitter/nvim-treesitter",
-      "version": "'main'"
     },
     "oil.nvim": {
       "rev": "d3733d933833a0e59b813ecec99341527adf0c28",

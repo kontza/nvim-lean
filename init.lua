@@ -5,23 +5,8 @@ local gh = function(repo) return 'https://github.com/' .. repo end
 local working, ret = pcall(function()
 	assert(vim.pack, 'vim.pack is missing: Neovim 0.12 or newer is required')
 
-	-- Build hooks have to be registered before vim.pack.add() so they also fire on first install.
-	vim.api.nvim_create_autocmd('PackChanged', {
-		group = vim.api.nvim_create_augroup('pure.pack', { clear = true }),
-		callback = function(ev)
-			local name, kind = ev.data.spec.name, ev.data.kind
-			if name == 'nvim-treesitter' and kind == 'update' then
-				if not ev.data.active then vim.cmd.packadd('nvim-treesitter') end
-				vim.cmd('TSUpdate')
-			end
-		end,
-	})
-
 	vim.pack.add({
 		gh('nvim-mini/mini.nvim'),
-		{ src = gh('nvim-treesitter/nvim-treesitter'), version = 'main' },
-		-- a release tag lets blink.cmp download its prebuilt fuzzy matcher
-		{ src = gh('saghen/blink.cmp'), version = vim.version.range('1') },
 		gh('rafamadriz/friendly-snippets'),
 	})
 
@@ -41,22 +26,16 @@ local working, ret = pcall(function()
 		require('mini.files').setup()
 		require('mini.diff').setup()
 
-		local supported_languages = { 'lua', 'vimdoc' }
-		require('nvim-treesitter').install(supported_languages)
+		-- parsers bundled with Neovim itself, so nothing has to be compiled
 		vim.api.nvim_create_autocmd('FileType', {
-			pattern = supported_languages,
+			pattern = { 'lua', 'help', 'vim', 'c', 'query', 'markdown' },
 			callback = function() vim.treesitter.start() end,
 		})
 
-		require('blink.cmp').setup({
-			keymap = { preset = 'enter' }, -- <CR> accepts the selected completion item
-			completion = {
-				accept = { auto_brackets = { enabled = true } },
-			},
-			cmdline = { enabled = false },
-			signature = { enabled = true },
-			fuzzy = { implementation = 'prefer_rust_with_warning' },
-		})
+		local snippets = require('mini.snippets')
+		snippets.setup({ snippets = { snippets.gen_loader.from_lang() } }) -- reads friendly-snippets
+		snippets.start_lsp_server() -- offers snippets as completion items
+		require('mini.completion').setup()
 
 		-- not needed for the first screen, so set up right after startup
 		vim.schedule(function()
@@ -64,6 +43,8 @@ local working, ret = pcall(function()
 			require('mini.comment').setup()
 			require('mini.surround').setup()
 			require('mini.pairs').setup()
+			-- <CR> accepts the selected completion item, otherwise falls through to mini.pairs
+			require('mini.keymap').map_multistep('i', '<CR>', { 'pmenu_accept', 'minipairs_cr' })
 			require('mini.jump').setup()
 			require('mini.pick').setup()
 			require('mini.extra').setup()
