@@ -1,3 +1,13 @@
+-- relative line numbers, with the absolute number on the cursor line
+vim.opt.number = true
+vim.opt.relativenumber = true
+
+-- spaces instead of tabs
+vim.opt.expandtab = true   -- <Tab> inserts spaces
+vim.opt.shiftwidth = 4     -- indent width for >>, <<, and autoindent
+vim.opt.tabstop = 4        -- how wide a real tab character is displayed
+vim.opt.softtabstop = -1   -- <Tab>/<BS> follow shiftwidth
+
 if vim.loader and vim.fn.has('nvim-0.9.1') == 1 then vim.loader.enable() end
 
 local path_package = vim.fn.stdpath('data') .. '/site'
@@ -85,32 +95,22 @@ local working, ret = pcall(function()
 			})
 		end)
 
-		now(function()
-			local function build_blink()
-				vim.notify('Building blink.cmp', vim.log.levels.INFO)
-				require('blink.cmp').build():pwait()
-			end
+        now(function()
+            add({
+                source = 'saghen/blink.cmp',
+                checkout = 'v1.10.2', -- a release tag => prebuilt binary is downloaded
+                depends = { 'rafamadriz/friendly-snippets' },
+            })
 
-			add({
-				source = 'saghen/blink.cmp',
-				depends = {
-					'saghen/blink.lib',
-					'rafamadriz/friendly-snippets',
-				},
-				hooks = {
-					post_install = build_blink,
-					post_checkout = build_blink,
-				},
-			})
-
-			require('blink.cmp').setup({
-				completion = {
-					accept = { auto_brackets = { enabled = true } },
-				},
-				cmdline = { enabled = false },
-				signature = { enabled = true },
-			})
-		end)
+            require('blink.cmp').setup({
+                completion = {
+                    accept = { auto_brackets = { enabled = true } },
+                },
+                cmdline = { enabled = false },
+                signature = { enabled = true },
+                fuzzy = { implementation = 'prefer_rust_with_warning' },
+            })
+        end)
 
 		config()
 	end
