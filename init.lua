@@ -112,7 +112,9 @@ local working, ret = pcall(function()
             })
         end)
 
-		config()
+		if (type(config) == 'function') then
+            config()
+		end
 	end
 end)
 
