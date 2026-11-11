@@ -1,9 +1,5 @@
 -- Do not wrap in a function if you'd like to override the supplied config
-return function(...)
-	local add, now, later = MiniDeps.add, MiniDeps.now, MiniDeps.later
-
+return function()
 	-- Your config here
-	now(function() add({ source = 'neovim/nvim-lspconfig', depends = { 'williamboman/mason.nvim' } }) end)
-
-	later(...)
+	vim.pack.add({ 'https://github.com/neovim/nvim-lspconfig', 'https://github.com/mason-org/mason.nvim' })
 end

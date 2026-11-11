@@ -1,5 +1,4 @@
 imports:
-  deps|mini: lua/_vendor/mini
   basics|mini: lua/_vendor/mini
   completion|mini: lua/_vendor/mini
   ai|mini: lua/_vendor/mini
@@ -8,10 +7,6 @@ imports:
   jump|mini: lua/_vendor/mini
   pairs|mini: lua/_vendor/mini
   surround|mini: lua/_vendor/mini
-
-git module deps:
-  url: https://github.com/nvim-mini/mini.deps
-  rev: c5b90b04661cc3a099ea81bd4f29fc6949289f99
 
 git module basics:
   url: https://github.com/nvim-mini/mini.basics

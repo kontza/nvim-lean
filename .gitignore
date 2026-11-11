@@ -16,6 +16,7 @@
 !/peru.yaml
 
 !/init.lua
+!/nvim-pack-lock.json
 
 !/lua
 /lua/*
