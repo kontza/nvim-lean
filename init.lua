@@ -1,110 +1,81 @@
-if vim.loader and vim.fn.has('nvim-0.9.1') == 1 then vim.loader.enable() end
+if vim.loader then vim.loader.enable() end
 
-local path_package = vim.fn.stdpath('data') .. '/site'
-
----@type table
-local _deps
-
-if not vim.uv.fs_stat(path_package .. '/pack/deps/start/mini.nvim') then
-	_deps = require('_vendor.mini.deps')
-	require('_vendor.mini.basics').setup()
-else
-	_deps = require('mini.deps')
-end
+local gh = function(repo) return 'https://github.com/' .. repo end
 
 local working, ret = pcall(function()
-	_deps.setup({ path = { package = path_package } })
+	assert(vim.pack, 'vim.pack is missing: Neovim 0.12 or newer is required')
 
-	local add, now, later = MiniDeps.add, MiniDeps.now, MiniDeps.later
+	-- Build hooks have to be registered before vim.pack.add() so they also fire on first install.
+	vim.api.nvim_create_autocmd('PackChanged', {
+		group = vim.api.nvim_create_augroup('pure.pack', { clear = true }),
+		callback = function(ev)
+			local name, kind = ev.data.spec.name, ev.data.kind
+			if name == 'nvim-treesitter' and kind == 'update' then
+				if not ev.data.active then vim.cmd.packadd('nvim-treesitter') end
+				vim.cmd('TSUpdate')
+			end
+		end,
+	})
 
-	add('nvim-mini/mini.nvim')
-	if
-		vim.uv.fs_stat(path_package .. '/pack/deps/opt/mini.nvim')
-		and not vim.uv.fs_stat(path_package .. '/pack/deps/start/mini.nvim')
-	then
-		vim.fn.mkdir(path_package .. '/pack/deps/start', 'p')
-		vim.uv.fs_rename(path_package .. '/pack/deps/opt/mini.nvim', path_package .. '/pack/deps/start/mini.nvim')
-	end
+	vim.pack.add({
+		gh('nvim-mini/mini.nvim'),
+		{ src = gh('nvim-treesitter/nvim-treesitter'), version = 'main' },
+		-- a release tag lets blink.cmp download its prebuilt fuzzy matcher
+		{ src = gh('saghen/blink.cmp'), version = vim.version.range('1') },
+		gh('rafamadriz/friendly-snippets'),
+	})
 
 	---@type boolean, function
 	local success, config = pcall(require, 'config')
 
 	if (success and type(config) == 'function') or not success then
-		now(function() require('mini.basics').setup() end)
-		now(function()
-			require('mini.notify').setup()
-			vim.notify = require('mini.notify').make_notify()
-		end)
-		now(function()
-			require('mini.icons').setup()
-			MiniIcons.mock_nvim_web_devicons()
-		end)
-		now(function() require('mini.statusline').setup() end)
-		now(function() require('mini.starter').setup() end)
+		require('mini.basics').setup()
+		require('mini.notify').setup()
+		vim.notify = require('mini.notify').make_notify()
+		require('mini.icons').setup()
+		MiniIcons.mock_nvim_web_devicons()
+		require('mini.statusline').setup()
+		require('mini.starter').setup()
 
 		-- load instantly to replace netrw
-		now(function() require('mini.files').setup() end)
+		require('mini.files').setup()
+		require('mini.diff').setup()
 
-		later(function() require('mini.ai').setup() end)
-		later(function() require('mini.comment').setup() end)
-		later(function() require('mini.surround').setup() end)
-		later(function() require('mini.pairs').setup() end)
-		later(function() require('mini.jump').setup() end)
-		later(function()
+		local supported_languages = { 'lua', 'vimdoc' }
+		require('nvim-treesitter').install(supported_languages)
+		vim.api.nvim_create_autocmd('FileType', {
+			pattern = supported_languages,
+			callback = function() vim.treesitter.start() end,
+		})
+
+		require('blink.cmp').setup({
+			completion = {
+				accept = { auto_brackets = { enabled = true } },
+			},
+			cmdline = { enabled = false },
+			signature = { enabled = true },
+			fuzzy = { implementation = 'prefer_rust_with_warning' },
+		})
+
+		-- not needed for the first screen, so set up right after startup
+		vim.schedule(function()
+			require('mini.ai').setup()
+			require('mini.comment').setup()
+			require('mini.surround').setup()
+			require('mini.pairs').setup()
+			require('mini.jump').setup()
 			require('mini.pick').setup()
 			require('mini.extra').setup()
-		end)
-		now(function() require('mini.diff').setup() end)
-		later(
-			function()
-				require('mini.indentscope').setup({
-					draw = { animation = require('mini.indentscope').gen_animation.none() },
-				})
-			end
-		)
-		later(function() require('mini.cursorword').setup() end)
-		later(function()
+			require('mini.indentscope').setup({
+				draw = { animation = require('mini.indentscope').gen_animation.none() },
+			})
+			require('mini.cursorword').setup()
 			require('mini.bufremove').setup()
 			vim.keymap.set('n', '<Leader>bd', function() require('mini.bufremove').delete(0) end)
-		end)
-		later(function() require('mini.bracketed').setup() end)
-
-		now(function()
-			add({
-				source = 'nvim-treesitter/nvim-treesitter',
-				checkout = 'main',
-				hooks = {
-					post_checkout = function() vim.cmd('TSUpdate') end,
-				},
-			})
-			local supported_languages = { 'lua', 'vimdoc' }
-			require('nvim-treesitter').install(supported_languages)
-			vim.api.nvim_create_autocmd('FileType', {
-				pattern = supported_languages,
-				callback = function() vim.treesitter.start() end,
-			})
+			require('mini.bracketed').setup()
 		end)
 
-        now(function()
-            add({
-                source = 'saghen/blink.cmp',
-                checkout = 'v1.10.2', -- a release tag => prebuilt binary is downloaded
-                depends = { 'rafamadriz/friendly-snippets' },
-            })
-
-            require('blink.cmp').setup({
-                completion = {
-                    accept = { auto_brackets = { enabled = true } },
-                },
-                cmdline = { enabled = false },
-                signature = { enabled = true },
-                fuzzy = { implementation = 'prefer_rust_with_warning' },
-            })
-        end)
-
-		if (type(config) == 'function') then
-            config()
-		end
+		if type(config) == 'function' then config() end
 	end
 end)
 
@@ -113,6 +84,7 @@ if not working then
 (pure.nvim) launched in failsafe mode. Only basic editing features are available.
 
 Possible reasons:
+* Neovim older than 0.12 (no vim.pack)
 * Internet unreachable during bootstrap
 * Broken `git` installation
 * Wrong permissions on site path
@@ -121,6 +93,7 @@ Traceback:
 ]]
 	vim.notify(failsafe_message .. ret, vim.log.levels.ERROR)
 
+	require('_vendor.mini.basics').setup()
 	require('_vendor.mini.ai').setup()
 	require('_vendor.mini.comment').setup()
 	require('_vendor.mini.surround').setup()
