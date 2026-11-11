@@ -1,13 +1,3 @@
--- relative line numbers, with the absolute number on the cursor line
-vim.opt.number = true
-vim.opt.relativenumber = true
-
--- spaces instead of tabs
-vim.opt.expandtab = true   -- <Tab> inserts spaces
-vim.opt.shiftwidth = 4     -- indent width for >>, <<, and autoindent
-vim.opt.tabstop = 4        -- how wide a real tab character is displayed
-vim.opt.softtabstop = -1   -- <Tab>/<BS> follow shiftwidth
-
 if vim.loader and vim.fn.has('nvim-0.9.1') == 1 then vim.loader.enable() end
 
 local path_package = vim.fn.stdpath('data') .. '/site'

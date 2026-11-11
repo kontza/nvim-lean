@@ -21,3 +21,4 @@
 /lua/*
 !/lua/_vendor
 !/lua/config.example.lua
+!/lua/config.lua
